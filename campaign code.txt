@@ -1,0 +1,496 @@
+import React, { useState, useMemo } from 'react';
+import { Search, TrendingUp, Clock, Filter, ChevronDown, Heart, Computer, Palette, Leaf, GraduationCap, Home, Users, Stethoscope, Rocket, MapPin, Calendar, Share2, Bookmark, Star, Eye, Target, DollarSign, Award } from 'lucide-react';
+
+const allCampaigns = [
+  { title: 'EcoTech Startup', desc: 'Revolutionary app for carbon footprint tracking with AI insights.', goal: 100000, raised: 45000, category: 'startup', trending: true, date: '2024-12-22', location: 'Mumbai', daysLeft: 25, backers: 234, featured: true, verified: true },
+  { title: 'Solar Village', desc: 'Bring solar power to rural homes.', goal: 20000, raised: 15000, category: 'tech', trending: true, date: '2024-12-15', location: 'Gujarat', daysLeft: 45, backers: 156, featured: false, verified: true },
+  { title: 'Tech for Kids', desc: 'Fund laptops for underprivileged children.', goal: 30000, raised: 21000, category: 'tech', trending: true, date: '2024-12-10', location: 'Delhi', daysLeft: 60, backers: 189, featured: false, verified: true },
+  { title: 'Green City Parks', desc: 'Plant 1000 trees in city parks.', goal: 10000, raised: 4000, category: 'environment', trending: false, date: '2024-12-20', location: 'Bangalore', daysLeft: 30, backers: 78, featured: false, verified: true },
+  { title: 'Disaster Relief', desc: 'Support families after floods.', goal: 25000, raised: 12000, category: 'social', trending: false, date: '2024-12-18', location: 'Kerala', daysLeft: 15, backers: 145, featured: false, verified: true },
+  { title: 'Art for All', desc: 'Community art workshops for children.', goal: 15000, raised: 8000, category: 'culture', trending: false, date: '2024-12-12', location: 'Jaipur', daysLeft: 40, backers: 92, featured: false, verified: false },
+  { title: 'Clean Water Initiative', desc: 'Provide clean drinking water to villages.', goal: 50000, raised: 35000, category: 'social', trending: true, date: '2024-12-08', location: 'Rajasthan', daysLeft: 35, backers: 267, featured: true, verified: true },
+  { title: 'Digital Education Hub', desc: 'Setup computer labs in rural schools.', goal: 40000, raised: 28000, category: 'education', trending: true, date: '2024-12-14', location: 'Uttar Pradesh', daysLeft: 50, backers: 201, featured: false, verified: true },
+  { title: 'FoodTech Revolution', desc: 'Sustainable food delivery platform using electric vehicles.', goal: 150000, raised: 87000, category: 'startup', trending: true, date: '2024-12-19', location: 'Pune', daysLeft: 42, backers: 512, featured: true, verified: true },
+  { title: 'Local Music Festival', desc: 'Support traditional music preservation.', goal: 12000, raised: 6000, category: 'culture', trending: false, date: '2024-12-16', location: 'Chennai', daysLeft: 28, backers: 67, featured: false, verified: false },
+  { title: 'Renewable Energy Research', desc: 'Fund innovative solar panel technology.', goal: 60000, raised: 45000, category: 'tech', trending: true, date: '2024-12-05', location: 'Hyderabad', daysLeft: 55, backers: 298, featured: false, verified: true },
+  { title: 'Healthcare Mobile Unit', desc: 'Mobile clinic for remote areas.', goal: 80000, raised: 55000, category: 'health', trending: true, date: '2024-12-11', location: 'Assam', daysLeft: 38, backers: 345, featured: true, verified: true },
+  { title: 'Urban Farming Project', desc: 'Rooftop gardens for sustainable food.', goal: 18000, raised: 9000, category: 'environment', trending: false, date: '2024-12-19', location: 'Kolkata', daysLeft: 33, backers: 89, featured: false, verified: true },
+  { title: 'Elder Care Support', desc: 'Home care services for elderly.', goal: 35000, raised: 20000, category: 'social', trending: false, date: '2024-12-07', location: 'Chandigarh', daysLeft: 22, backers: 167, featured: false, verified: true },
+  { title: 'EdTech for Rural India', desc: 'Interactive learning platform for village schools.', goal: 200000, raised: 95000, category: 'startup', trending: true, date: '2024-12-21', location: 'Bangalore', daysLeft: 48, backers: 678, featured: true, verified: true },
+];
+
+const categories = [
+  { id: 'all', name: 'All Categories', icon: Filter },
+  { id: 'startup', name: 'Startups', icon: Rocket },
+  { id: 'tech', name: 'Technology', icon: Computer },
+  { id: 'social', name: 'Social Impact', icon: Heart },
+  { id: 'culture', name: 'Culture & Arts', icon: Palette },
+  { id: 'environment', name: 'Environment', icon: Leaf },
+  { id: 'education', name: 'Education', icon: GraduationCap },
+  { id: 'health', name: 'Healthcare', icon: Stethoscope },
+];
+
+const sortOptions = [
+  { id: 'trending', name: 'Trending' },
+  { id: 'latest', name: 'Latest' },
+  { id: 'featured', name: 'Featured' },
+  { id: 'goal-high', name: 'Highest Goal' },
+  { id: 'goal-low', name: 'Lowest Goal' },
+  { id: 'progress-high', name: 'Most Funded' },
+  { id: 'progress-low', name: 'Needs Funding' },
+  { id: 'ending-soon', name: 'Ending Soon' },
+  { id: 'most-backers', name: 'Most Backers' },
+];
+
+export default function Discovery() {
+  const [tab, setTab] = useState('trending');
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('trending');
+  const [showFilters, setShowFilters] = useState(false);
+  const [bookmarkedCampaigns, setBookmarkedCampaigns] = useState(new Set());
+  const [viewMode, setViewMode] = useState('grid');
+
+  const filteredAndSortedCampaigns = useMemo(() => {
+    let filtered = allCampaigns;
+
+    // Apply search filter
+    if (search.trim()) {
+      filtered = filtered.filter(campaign =>
+        campaign.title.toLowerCase().includes(search.toLowerCase()) ||
+        campaign.desc.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(campaign => campaign.category === selectedCategory);
+    }
+
+    // Apply tab filter
+    if (tab === 'trending') {
+      filtered = filtered.filter(campaign => campaign.trending);
+    } else if (tab === 'featured') {
+      filtered = filtered.filter(campaign => campaign.featured);
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'trending':
+        filtered = filtered.sort((a, b) => Number(b.trending) - Number(a.trending));
+        break;
+      case 'latest':
+        filtered = filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+        break;
+      case 'featured':
+        filtered = filtered.sort((a, b) => Number(b.featured) - Number(a.featured));
+        break;
+      case 'goal-high':
+        filtered = filtered.sort((a, b) => b.goal - a.goal);
+        break;
+      case 'goal-low':
+        filtered = filtered.sort((a, b) => a.goal - b.goal);
+        break;
+      case 'progress-high':
+        filtered = filtered.sort((a, b) => (b.raised / b.goal) - (a.raised / a.goal));
+        break;
+      case 'progress-low':
+        filtered = filtered.sort((a, b) => (a.raised / a.goal) - (b.raised / b.goal));
+        break;
+      case 'ending-soon':
+        filtered = filtered.sort((a, b) => a.daysLeft - b.daysLeft);
+        break;
+      case 'most-backers':
+        filtered = filtered.sort((a, b) => b.backers - a.backers);
+        break;
+      default:
+        break;
+    }
+
+    return filtered;
+  }, [search, selectedCategory, tab, sortBy]);
+
+  const handleSearch = () => {
+    // Search is handled by the useMemo hook automatically
+  };
+
+  const toggleBookmark = (campaignIndex) => {
+    const newBookmarks = new Set(bookmarkedCampaigns);
+    if (newBookmarks.has(campaignIndex)) {
+      newBookmarks.delete(campaignIndex);
+    } else {
+      newBookmarks.add(campaignIndex);
+    }
+    setBookmarkedCampaigns(newBookmarks);
+  };
+
+  const handleShare = (campaign) => {
+    if (navigator.share) {
+      navigator.share({
+        title: campaign.title,
+        text: campaign.desc,
+        url: window.location.href
+      });
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(window.location.href);
+      alert('Campaign link copied to clipboard!');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-center text-blue-900 drop-shadow-sm">
+          Discover Campaigns
+        </h1>
+        
+        {/* Search and Filter Bar */}
+        <div className="mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="flex-1 flex items-center gap-2">
+              <input
+                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm bg-white"
+                placeholder="Search campaigns..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              <button 
+                onClick={handleSearch} 
+                className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            </div>
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors bg-white shadow-sm"
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+
+          {/* Filter Controls */}
+          {showFilters && (
+            <div className="mt-4 p-4 bg-white rounded-lg shadow-sm border">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Category Filter */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Category</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {categories.map(category => {
+                      const Icon = category.icon;
+                      return (
+                        <button
+                          key={category.id}
+                          onClick={() => setSelectedCategory(category.id)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            selectedCategory === category.id
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-white hover:bg-gray-50 border border-gray-300'
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {category.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Sort Filter */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Sort By</label>
+                  <select
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    {sortOptions.map(option => (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+            <div className="flex gap-4 mb-4 md:mb-0">
+              <button
+                onClick={() => setTab('trending')}
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors shadow-sm ${
+                  tab === 'trending'
+                    ? 'bg-white text-blue-600 border-2 border-blue-500'
+                    : 'bg-white/80 hover:bg-white border border-gray-300'
+                }`}
+              >
+                <TrendingUp className="h-5 w-5" />
+                Trending ({allCampaigns.filter(c => c.trending).length})
+              </button>
+              <button
+                onClick={() => setTab('latest')}
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors shadow-sm ${
+                  tab === 'latest'
+                    ? 'bg-white text-blue-600 border-2 border-blue-500'
+                    : 'bg-white/80 hover:bg-white border border-gray-300'
+                }`}
+              >
+                <Clock className="h-5 w-5" />
+                Latest ({allCampaigns.length})
+              </button>
+              <button
+                onClick={() => setTab('featured')}
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors shadow-sm ${
+                  tab === 'featured'
+                    ? 'bg-white text-blue-600 border-2 border-blue-500'
+                    : 'bg-white/80 hover:bg-white border border-gray-300'
+                }`}
+              >
+                <Star className="h-5 w-5" />
+                Featured ({allCampaigns.filter(c => c.featured).length})
+              </button>
+            </div>
+            
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">View:</span>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
+                  <div className="bg-current rounded-sm"></div>
+                  <div className="bg-current rounded-sm"></div>
+                  <div className="bg-current rounded-sm"></div>
+                  <div className="bg-current rounded-sm"></div>
+                </div>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                <div className="w-4 h-4 flex flex-col gap-0.5">
+                  <div className="bg-current h-1 rounded-sm"></div>
+                  <div className="bg-current h-1 rounded-sm"></div>
+                  <div className="bg-current h-1 rounded-sm"></div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Active Filters Display */}
+          {(selectedCategory !== 'all' || search.trim()) && (
+            <div className="mb-4 flex flex-wrap gap-2">
+              {search.trim() && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  Search: "{search}"
+                  <button onClick={() => setSearch('')} className="ml-1 hover:text-blue-600">×</button>
+                </span>
+              )}
+              {selectedCategory !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  {categories.find(c => c.id === selectedCategory)?.name}
+                  <button onClick={() => setSelectedCategory('all')} className="ml-1 hover:text-blue-600">×</button>
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Campaign Grid/List */}
+          {filteredAndSortedCampaigns.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-lg">No campaigns found matching your criteria.</p>
+              <button 
+                onClick={() => {
+                  setSearch('');
+                  setSelectedCategory('all');
+                }} 
+                className="mt-4 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
+          ) : (
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+              {filteredAndSortedCampaigns.map((campaign, i) => {
+                const progressPercentage = (campaign.raised / campaign.goal) * 100;
+                const categoryInfo = categories.find(c => c.id === campaign.category);
+                const CategoryIcon = categoryInfo?.icon || Filter;
+                const isBookmarked = bookmarkedCampaigns.has(i);
+
+                if (viewMode === 'list') {
+                  return (
+                    <div key={i} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 flex gap-6">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                              <CategoryIcon className="h-3 w-3" />
+                              {categoryInfo?.name || 'Other'}
+                            </span>
+                            {campaign.featured && (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                                <Star className="h-3 w-3" />
+                                Featured
+                              </span>
+                            )}
+                            {campaign.trending && (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs">
+                                <TrendingUp className="h-3 w-3" />
+                                Trending
+                              </span>
+                            )}
+                            {campaign.verified && (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                <Award className="h-3 w-3" />
+                                Verified
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => toggleBookmark(i)}
+                              className={`p-2 rounded-full transition-colors ${
+                                isBookmarked ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-gray-600'
+                              }`}
+                            >
+                              <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                            </button>
+                            <button
+                              onClick={() => handleShare(campaign)}
+                              className="p-2 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              <Share2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{campaign.title}</h3>
+                        <p className="text-gray-700 text-sm mb-4">{campaign.desc}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {campaign.location}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {campaign.daysLeft} days left
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            {campaign.backers} backers
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500"
+                              style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-sm text-gray-600">
+                            <span>₹{campaign.raised.toLocaleString()}</span>
+                            <span className="font-medium">{progressPercentage.toFixed(1)}%</span>
+                            <span>₹{campaign.goal.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col justify-center">
+                        <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                          View Campaign
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={i} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                    {/* Card Header */}
+                    <div className="p-6 pb-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                          <CategoryIcon className="h-3 w-3" />
+                          {categoryInfo?.name || 'Other'}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => toggleBookmark(i)}
+                            className={`p-1 rounded-full transition-colors ${
+                              isBookmarked ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-gray-600'
+                            }`}
+                          >
+                            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                          </button>
+                          <button
+                            onClick={() => handleShare(campaign)}
+                            className="p-1 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {campaign.featured && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                            <Star className="h-3 w-3" />
+                            Featured
+                          </span>
+                        )}
+                        {campaign.trending && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-600 rounded-full text-xs">
+                            <TrendingUp className="h-3 w-3" />
+                            Trending
+                          </span>
+                        )}
+                        {campaign.verified && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                            <Award className="h-3 w-3" />
+                            Verified
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{campaign.title}</h3>
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="px-6 pb-4">
+                      <p className="mb-4 text-gray-700 text-sm leading-relaxed">{campaign.desc}</p>
+                      <div className="space-y-2">
+                        <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500"
+                            style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>₹{campaign.raised.toLocaleString()}</span>
+                          <span className="font-medium">{progressPercentage.toFixed(1)}%</span>
+                          <span>₹{campaign.goal.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Footer */}
+                    <div className="px-6 pb-6">
+                      <button className="w-full py-2 px-4 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-colors">
+                        View Campaign
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
