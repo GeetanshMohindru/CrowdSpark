@@ -1,23 +1,43 @@
 import React from 'react';
-import { LucideSparkles, LucideSearch, LucideUser } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Bell, User, Settings } from 'lucide-react';
+import { Button } from './button';
 
-export function Topbar() {
+export function Topbar({ unreadCount = 0 }) {
   return (
-    <header className="w-full flex items-center justify-between px-6 py-4 bg-white/80 shadow-sm sticky top-0 z-40">
-      <div className="flex items-center gap-3">
-        <LucideSparkles className="h-7 w-7 text-primary" />
-        <span className="text-2xl font-extrabold text-primary tracking-tight">CrowdSpark</span>
+    <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Link to="/" className="text-2xl font-bold text-primary">
+            CrowdSpark
+          </Link>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {/* Notifications */}
+          <Link to="/notifications" className="relative">
+            <Button variant="ghost" size="sm" className="relative">
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </Button>
+          </Link>
+          
+          {/* User Menu */}
+          <Button variant="ghost" size="sm">
+            <User className="h-5 w-5" />
+          </Button>
+          
+          {/* Settings */}
+          <Button variant="ghost" size="sm">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
-      <form className="flex items-center gap-2 bg-gray-100 rounded px-3 py-1 max-w-xs w-full">
-        <LucideSearch className="h-5 w-5 text-gray-400" />
-        <input
-          className="bg-transparent outline-none border-0 text-sm w-full"
-          placeholder="Search..."
-        />
-      </form>
-      <div className="flex items-center gap-4">
-        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="avatar" className="h-9 w-9 rounded-full border-2 border-primary object-cover" />
-      </div>
-    </header>
+    </div>
   );
-} 
+}
+
